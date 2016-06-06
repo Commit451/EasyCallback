@@ -6,6 +6,22 @@ Easier Retrofit callbacks
 
 Many times when using Retrofit, you would probably want your `isSuccessful()` responses to just fall through into your failure case. That is what this do. It is very reminiscent of Retrofit 1.X callback days
 
+# Usage
+Usage is simple:
+```java
+api.getUsers().enqueue(new EasyCallback<ResponseBody>() {
+    @Override
+    public void success(@NonNull ResponseBody response) {
+        textView.setText("Things worked!");
+    }
+
+    @Override
+    public void failure(Throwable t) {
+        mTextView.setText("Something went wrong");
+    }
+});
+```   
+
 License
 --------
 
