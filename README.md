@@ -42,6 +42,9 @@ public void failure(Throwable t) {
 }
 ```
 
+# Note
+If your API happens to return a `200` code, but contains an empty body, this will fall through to the `failure` block due to the fact that we check for `null` in the `onResponse` and redirect to `failure` if the response is null. 
+
 License
 --------
 
