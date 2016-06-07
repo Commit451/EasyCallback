@@ -22,6 +22,26 @@ api.getUsers().enqueue(new EasyCallback<ResponseBody>() {
 });
 ```   
 
+If you actually need to perform different actions depending on the HTTP error status code, you can still do so:
+```java
+@Override
+public void failure(Throwable t) {
+    Timber.e(t, null);
+    if (t instanceof HttpException) {
+        switch (((HttpException) t).getCode()) {
+            case 404:
+                mTextView.setText("Thingy not found");
+                break;
+            case 500:
+                mTextView.setText("Our server broke :(");
+                break;
+        }
+    } else {
+        mTextView.setText("Some generic error message");
+    }
+}
+```
+
 License
 --------
 
