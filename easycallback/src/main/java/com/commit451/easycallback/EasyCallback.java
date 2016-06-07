@@ -66,6 +66,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
      * Get the call that was originally made
      * @return the call
      */
+    @NonNull
     public Call<T> getCall() {
         return mCall;
     }
