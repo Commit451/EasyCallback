@@ -4,7 +4,7 @@ Easier Retrofit callbacks
 [![Build Status](https://travis-ci.org/Commit451/EasyCallback.svg?branch=master)](https://travis-ci.org/Commit451/EasyCallback)
 [![](https://jitpack.io/v/Commit451/EasyCallback.svg)](https://jitpack.io/#Commit451/EasyCallback)
 
-Many times when using Retrofit, you would probably want your `isSuccessful()` responses to just fall through into your failure case. That is what this do. It is very reminiscent of Retrofit 1.X callback days
+Many times when using Retrofit, you would probably want your `!isSuccessful()` responses to just fall through into your failure case. That is what this do. It is very reminiscent of Retrofit 1.X callback days
 
 # Usage
 Usage is simple:
