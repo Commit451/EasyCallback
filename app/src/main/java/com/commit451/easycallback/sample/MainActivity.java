@@ -72,7 +72,8 @@ public class MainActivity extends AppCompatActivity {
                         public void failure(Throwable t) {
                             Toast.makeText(MainActivity.this, "OkHttp error!", Toast.LENGTH_SHORT).show();
                         }
-                    });
+                        //Just to show you that you can do this if you really need to
+                    }.allowNullBodies(true));
             }
         });
     }

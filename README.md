@@ -1,13 +1,13 @@
 # EasyCallback
-Easier Retrofit callbacks
+Easier Retrofit and OkHttp callbacks
 
 [![Build Status](https://travis-ci.org/Commit451/EasyCallback.svg?branch=master)](https://travis-ci.org/Commit451/EasyCallback)
 [![](https://jitpack.io/v/Commit451/EasyCallback.svg)](https://jitpack.io/#Commit451/EasyCallback)
 
-Many times when using Retrofit, you would probably want your `!isSuccessful()` responses to just fall through into your failure case. That is what this do. It is very reminiscent of Retrofit 1.X callback days
+Many times when using Retrofit or OkHttp, you would probably want your `!isSuccessful()` responses to just fall through into your failure case. That is what this does for you. It is very reminiscent of Retrofit 1.X callback days.
 
 # Usage
-Usage is simple:
+Usage is simple and similar to regular Retrofit Callbacks:
 ```java
 api.getUsers().enqueue(new EasyCallback<ResponseBody>() {
     @Override
@@ -41,10 +41,12 @@ public void failure(Throwable t) {
     }
 }
 ```
-There is also `EasyOkCallback` which is an OkHttp specific flavor of the Callback which also checks `isSuccessful()` and will also by default post the result on the main thread for simplicity
+You can also still retrieve information about the call with things like `getCall()` or `getResponse()` if needed.
+
+`EasyOkCallback` is an OkHttp specific flavor of the Callback which also checks `isSuccessful()` and will also by default post the result on the main thread for simplicity.
 
 # Note
-If your API happens to return a `200` code, but contains an empty body, this will fall through to the `failure` block due to the fact that we check for `null` in the `onResponse` and redirect to `failure` if the response is null. 
+If your API happens to return a `200` code, but contains an empty body, this will fall through to the `failure` block due to the fact that we check for `null` in the `onResponse` and redirect to `failure` if the response is null. You can work around this by calling `allowNullBodies(true)` on the callback.
 
 License
 --------

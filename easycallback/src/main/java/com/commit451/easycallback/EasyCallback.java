@@ -20,6 +20,12 @@ public abstract class EasyCallback<T> implements Callback<T> {
     private Response<T> mResponse;
     private Call<T> mCall;
 
+    private boolean mAllowNullBodies;
+
+    public EasyCallback() {
+        mAllowNullBodies = false;
+    }
+
     /**
      * Called on success. You can still get the original {@link Response} via {@link #getResponse()}
      * @param response the response
@@ -32,6 +38,16 @@ public abstract class EasyCallback<T> implements Callback<T> {
      */
     public abstract void failure(Throwable t);
 
+    /**
+     * Allows specification of if you want the callback to consider null bodies as a {@link NullBodyException}. Default is false
+     * @param allowNullBodies true if you want to allow null bodies, false if you want exceptions throw on null bodies
+     * @return this
+     */
+    public EasyCallback<T> allowNullBodies(boolean allowNullBodies) {
+        mAllowNullBodies = allowNullBodies;
+        return this;
+    }
+
     @Override
     public void onResponse(Call<T> call, Response<T> response) {
         mCall = call;
@@ -40,7 +56,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
             failure(new HttpException(response.code(), response.errorBody()));
             return;
         }
-        if (response.body() == null) {
+        if (response.body() == null && !mAllowNullBodies) {
             failure(new NullBodyException());
             return;
         }

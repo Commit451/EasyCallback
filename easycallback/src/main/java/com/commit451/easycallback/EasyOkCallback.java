@@ -27,13 +27,11 @@ public abstract class EasyOkCallback implements Callback {
 
     private Call mCall;
     private boolean mCallbackOnMainThread;
+    private boolean mAllowNullBodies;
 
     public EasyOkCallback() {
-        this(true);
-    }
-
-    public EasyOkCallback(boolean callbackOnMainThread) {
-        mCallbackOnMainThread = callbackOnMainThread;
+        mCallbackOnMainThread = true;
+        mAllowNullBodies = false;
     }
 
     /**
@@ -50,6 +48,26 @@ public abstract class EasyOkCallback implements Callback {
      */
     public abstract void failure(Throwable t);
 
+    /**
+     * Allows specification of if you want the callback on the main thread. Default is true
+     * @param callbackOnMainThread true if you want it on the main thread, false if you want it on the background thread
+     * @return this
+     */
+    public EasyOkCallback callbackOnMainThread(boolean callbackOnMainThread) {
+        mCallbackOnMainThread = callbackOnMainThread;
+        return this;
+    }
+
+    /**
+     * Allows specification of if you want the callback to consider null bodies as a {@link NullBodyException}. Default is false
+     * @param allowNullBodies true if you want to allow null bodies, false if you want exceptions throw on null bodies
+     * @return this
+     */
+    public EasyOkCallback allowNullBodies(boolean allowNullBodies) {
+        mAllowNullBodies = allowNullBodies;
+        return this;
+    }
+
     @Override
     public void onResponse(Call call, Response response) throws IOException {
         mCall = call;
@@ -57,7 +75,7 @@ public abstract class EasyOkCallback implements Callback {
             callFailure(new HttpException(response.code(), response.body()));
             return;
         }
-        if (response.body() == null) {
+        if (response.body() == null && !mAllowNullBodies) {
             callFailure(new NullBodyException());
             return;
         }
