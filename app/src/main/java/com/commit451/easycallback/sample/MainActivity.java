@@ -9,11 +9,13 @@ import android.widget.Toast;
 
 import com.commit451.easycallback.EasyCallback;
 import com.commit451.easycallback.EasyOkCallback;
+import com.commit451.easycallback.HttpException;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
@@ -34,11 +36,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mTextView = (TextView) findViewById(R.id.text);
 
-        mOkHttpClient = new OkHttpClient();
+        mOkHttpClient = new OkHttpClient.Builder()
+                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+                .build();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://www.google.com/")
                 .client(mOkHttpClient)
-                //.addConverterFactory(LoganSquareConverterFactory.create())
                 .build();
         Google google = retrofit.create(Google.class);
 
@@ -58,23 +61,51 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                    Request request = new Request.Builder()
-                            .url("https://www.google.com")
-                            .build();
+                Request request = new Request.Builder()
+                        .url("https://www.google.com")
+                        .build();
 
-                    mOkHttpClient.newCall(request).enqueue(new EasyOkCallback() {
-                        @Override
-                        public void success(@NonNull Response response) {
-                            Toast.makeText(MainActivity.this, "OkHttp Success!", Toast.LENGTH_SHORT).show();
-                        }
+                mOkHttpClient.newCall(request).enqueue(new EasyOkCallback() {
+                    @Override
+                    public void success(@NonNull Response response) {
+                        Toast.makeText(MainActivity.this, "OkHttp Success!", Toast.LENGTH_SHORT).show();
+                    }
 
-                        @Override
-                        public void failure(Throwable t) {
-                            Toast.makeText(MainActivity.this, "OkHttp error!", Toast.LENGTH_SHORT).show();
-                        }
-                        //Just to show you that you can do this if you really need to
-                    }.allowNullBodies(true));
+                    @Override
+                    public void failure(Throwable t) {
+                        Toast.makeText(MainActivity.this, "OkHttp error!", Toast.LENGTH_SHORT).show();
+                    }
+                    //Just to show you that you can do this if you really need to
+                }.allowNullBodies(true));
             }
         });
+
+        findViewById(R.id.button_error).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //This will 404... I hope
+                Request request = new Request.Builder()
+                        .url("https://github.com/asdlfkjalksdjflkajsdf")
+                        .build();
+
+                mOkHttpClient.newCall(request).enqueue(new EasyOkCallback() {
+                    @Override
+                    public void success(@NonNull Response response) {
+                        Toast.makeText(MainActivity.this, "Success... that doesn't make sense....", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void failure(Throwable t) {
+                        if (t instanceof HttpException) {
+                            Toast.makeText(MainActivity.this, "OkHttp error! Error code " + ((HttpException) t).getCode(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Not an Http error, so that is weird", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        });
+
+
     }
 }

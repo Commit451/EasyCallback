@@ -22,4 +22,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Test EasyOkCallback"/>
+
+    <Button
+        android:id="@+id/button_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Test Error"/>
 </LinearLayout>
