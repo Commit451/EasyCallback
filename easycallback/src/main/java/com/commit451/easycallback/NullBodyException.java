@@ -7,6 +7,6 @@ public class NullBodyException extends Exception {
 
     @Override
     public String getMessage() {
-        return "The Retrofit body was null";
+        return "The body was null";
     }
 }
