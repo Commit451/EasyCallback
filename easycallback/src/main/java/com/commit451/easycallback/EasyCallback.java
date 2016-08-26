@@ -1,7 +1,6 @@
 package com.commit451.easycallback;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -15,8 +14,7 @@ import retrofit2.Response;
  * will be called with a {@link HttpException}
  */
 public abstract class EasyCallback<T> implements Callback<T> {
-
-    @Nullable
+    
     private Response<T> mResponse;
     private Call<T> mCall;
 
@@ -70,10 +68,11 @@ public abstract class EasyCallback<T> implements Callback<T> {
     }
 
     /**
-     * Get the Retrofit response. If you are in the {@link #failure(Throwable)} block, this will be null if your failure was not an HTTP error, so beware
+     * Get the Retrofit response. If you are in the {@link #failure(Throwable)} block, this will be
+     * null if your failure was not an HTTP error, so make sure to check that the exception is an
+     * instance of {@link HttpException} before calling, or check that the response is not null
      * @return the retrofit response, if any exists
      */
-    @Nullable
     public Response<T> getResponse() {
         return mResponse;
     }
