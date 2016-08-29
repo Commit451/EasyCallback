@@ -20,6 +20,9 @@ public abstract class EasyCallback<T> implements Callback<T> {
 
     private boolean mAllowNullBodies;
 
+    /**
+     * Create an easy callback
+     */
     public EasyCallback() {
         mAllowNullBodies = false;
     }

@@ -29,6 +29,9 @@ public abstract class EasyOkCallback implements Callback {
     private boolean mCallbackOnMainThread;
     private boolean mAllowNullBodies;
 
+    /**
+     * Create an easy callback
+     */
     public EasyOkCallback() {
         mCallbackOnMainThread = true;
         mAllowNullBodies = false;
