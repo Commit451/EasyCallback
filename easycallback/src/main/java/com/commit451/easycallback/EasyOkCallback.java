@@ -12,29 +12,30 @@ import okhttp3.Response;
 
 
 /**
- * Like {@link EasyCallback} but geared toward an OkHttp {@link Callback}. This callback also automatically posts on the Main thread by default for convenience
+ * Like {@link EasyCallback} but geared toward an OkHttp {@link Callback}.
+ * This callback also automatically posts on the Main thread by default for convenience
  */
 public abstract class EasyOkCallback implements Callback {
 
-    private static Handler sMainHandler;
+    private static Handler mainHandler;
 
     private static Handler getMainHandler() {
-        if (sMainHandler == null) {
-            sMainHandler = new Handler(Looper.getMainLooper());
+        if (mainHandler == null) {
+            mainHandler = new Handler(Looper.getMainLooper());
         }
-        return sMainHandler;
+        return mainHandler;
     }
 
-    private Call mCall;
-    private boolean mCallbackOnMainThread;
-    private boolean mAllowNullBodies;
+    private Call call;
+    private boolean callbackOnMainThread;
+    private boolean allowNullBodies;
 
     /**
      * Create an easy callback
      */
     public EasyOkCallback() {
-        mCallbackOnMainThread = true;
-        mAllowNullBodies = false;
+        callbackOnMainThread = true;
+        allowNullBodies = false;
     }
 
     /**
@@ -57,7 +58,7 @@ public abstract class EasyOkCallback implements Callback {
      * @return this
      */
     public EasyOkCallback callbackOnMainThread(boolean callbackOnMainThread) {
-        mCallbackOnMainThread = callbackOnMainThread;
+        this.callbackOnMainThread = callbackOnMainThread;
         return this;
     }
 
@@ -67,18 +68,18 @@ public abstract class EasyOkCallback implements Callback {
      * @return this
      */
     public EasyOkCallback allowNullBodies(boolean allowNullBodies) {
-        mAllowNullBodies = allowNullBodies;
+        this.allowNullBodies = allowNullBodies;
         return this;
     }
 
     @Override
-    public void onResponse(Call call, Response response) throws IOException {
-        mCall = call;
+    public void onResponse(Call call, Response response) {
+        this.call = call;
         if (!response.isSuccessful()) {
             callFailure(new HttpException(response));
             return;
         }
-        if (response.body() == null && !mAllowNullBodies) {
+        if (response.body() == null && !allowNullBodies) {
             callFailure(new NullBodyException());
             return;
         }
@@ -87,17 +88,17 @@ public abstract class EasyOkCallback implements Callback {
 
     @Override
     public void onFailure(Call call, IOException e) {
-        mCall = call;
+        this.call = call;
         failure(e);
     }
 
     @NonNull
-    public Call getCall() {
-        return mCall;
+    public Call call() {
+        return call;
     }
 
     private void callSuccess(final Response response) {
-        if (mCallbackOnMainThread) {
+        if (callbackOnMainThread) {
             getMainHandler().post(new Runnable() {
                 @Override
                 public void run() {
@@ -110,7 +111,7 @@ public abstract class EasyOkCallback implements Callback {
     }
 
     private void callFailure(final Exception e) {
-        if (mCallbackOnMainThread) {
+        if (callbackOnMainThread) {
             getMainHandler().post(new Runnable() {
                 @Override
                 public void run() {
