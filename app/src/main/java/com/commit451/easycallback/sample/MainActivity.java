@@ -25,6 +25,9 @@ public class MainActivity extends AppCompatActivity {
     interface Google {
         @GET("about")
         Call<ResponseBody> getAbout();
+
+        @GET("home")
+        Call<Void> getVoid();
     }
 
     TextView mTextView;
@@ -43,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
                 .baseUrl("https://www.google.com/")
                 .client(mOkHttpClient)
                 .build();
-        Google google = retrofit.create(Google.class);
+        final Google google = retrofit.create(Google.class);
 
         google.getAbout().enqueue(new EasyCallback<ResponseBody>() {
             @Override
@@ -106,6 +109,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.button_void).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                google.getVoid().enqueue(new EasyCallback<Void>() {
+                    @Override
+                    public void success(@NonNull Void response) {
+                        Toast.makeText(MainActivity.this, "Void works when we allow null bodies!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void failure(Throwable t) {
+                        t.printStackTrace();
+                        Toast.makeText(MainActivity.this, "Void failed...", Toast.LENGTH_SHORT).show();
+                    }
+                }.allowNullBodies(true));
+            }
+        });
 
     }
 }
