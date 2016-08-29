@@ -28,7 +28,7 @@ If you actually need to perform different actions depending on the HTTP error st
 public void failure(Throwable t) {
     Timber.e(t, null);
     if (t instanceof HttpException) {
-        switch (((HttpException) t).getCode()) {
+        switch (((HttpException) t).response().code()) {
             case 404:
                 mTextView.setText("Thingy not found");
                 break;
@@ -41,7 +41,7 @@ public void failure(Throwable t) {
     }
 }
 ```
-You can also still retrieve information about the call with things like `getCall()` or `getResponse()` if needed.
+You can also still retrieve information about the call with things like `call()` or `response()` if needed.
 
 `EasyOkCallback` is an OkHttp specific flavor of the Callback which also checks `isSuccessful()` and will also by default post the result on the main thread for simplicity.
 
