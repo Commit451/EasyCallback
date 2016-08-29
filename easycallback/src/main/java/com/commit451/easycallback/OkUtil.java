@@ -9,7 +9,7 @@ import java.io.InputStream;
 import okhttp3.ResponseBody;
 
 /**
- * A Util to do things with OkHttp
+ * A Util to do things with OkHttp, such as parse {@link ResponseBody}
  */
 public class OkUtil {
 

@@ -15,16 +15,16 @@ import retrofit2.Response;
  */
 public abstract class EasyCallback<T> implements Callback<T> {
     
-    private Response<T> mResponse;
-    private Call<T> mCall;
+    private Response<T> response;
+    private Call<T> call;
 
-    private boolean mAllowNullBodies;
+    private boolean allowNullBodies;
 
     /**
      * Create an easy callback
      */
     public EasyCallback() {
-        mAllowNullBodies = false;
+        allowNullBodies = false;
     }
 
     /**
@@ -45,19 +45,19 @@ public abstract class EasyCallback<T> implements Callback<T> {
      * @return this
      */
     public EasyCallback<T> allowNullBodies(boolean allowNullBodies) {
-        mAllowNullBodies = allowNullBodies;
+        this.allowNullBodies = allowNullBodies;
         return this;
     }
 
     @Override
     public void onResponse(Call<T> call, Response<T> response) {
-        mCall = call;
-        mResponse = response;
+        this.call = call;
+        this.response = response;
         if (!response.isSuccessful()) {
             failure(new HttpException(response.raw(), response.errorBody()));
             return;
         }
-        if (response.body() == null && !mAllowNullBodies) {
+        if (response.body() == null && !allowNullBodies) {
             failure(new NullBodyException());
             return;
         }
@@ -66,7 +66,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
 
     @Override
     public void onFailure(Call<T> call, Throwable t) {
-        mCall = call;
+        this.call = call;
         failure(t);
     }
 
@@ -77,7 +77,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
      * @return the retrofit response, if any exists
      */
     public Response<T> response() {
-        return mResponse;
+        return response;
     }
 
     /**
@@ -86,6 +86,6 @@ public abstract class EasyCallback<T> implements Callback<T> {
      */
     @NonNull
     public Call<T> call() {
-        return mCall;
+        return call;
     }
 }
