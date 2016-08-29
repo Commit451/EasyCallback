@@ -1,7 +1,6 @@
 package com.commit451.easycallback;
 
-import java.io.IOException;
-
+import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
@@ -9,28 +8,48 @@ import okhttp3.ResponseBody;
  */
 public class HttpException extends Exception {
 
-    private int mCode;
-    private ResponseBody mErrorBody;
+    private Response mResponse;
+    private ResponseBody mErrorResponseBody;
 
-    public HttpException(int code, ResponseBody errorBody) {
-        mCode = code;
-        mErrorBody = errorBody;
+    /**
+     * Create an http exception assuming that {@link Response#body()} is the error body
+     * @param response the response
+     */
+    public HttpException(Response response) {
+        mResponse = response;
+    }
+
+    /**
+     * Create an http exception with an explicit error body, typically used for Retrofit
+     * @param response the response
+     * @param errorResponseBody the error response body
+     */
+    public HttpException(Response response, ResponseBody errorResponseBody) {
+        mResponse = response;
+        mErrorResponseBody = errorResponseBody;
     }
 
     @Override
     public String getMessage() {
-        try {
-            return mErrorBody.string();
-        } catch (IOException e) {
-            return e.toString();
+        return mResponse.message();
+    }
+
+    /**
+     * Get the raw {@link Response} from OkHttp which forced this request to have an exception
+     * @return the response
+     */
+    public Response response() {
+        return mResponse;
+    }
+
+    /**
+     * Get the error body
+     * @return the error body
+     */
+    public ResponseBody errorBody() {
+        if (mErrorResponseBody != null) {
+            return mErrorResponseBody;
         }
-    }
-
-    public ResponseBody getResponseBody() {
-        return mErrorBody;
-    }
-
-    public int getCode() {
-        return mCode;
+        return mResponse.body();
     }
 }

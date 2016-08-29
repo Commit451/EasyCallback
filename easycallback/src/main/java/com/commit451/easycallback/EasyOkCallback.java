@@ -75,7 +75,7 @@ public abstract class EasyOkCallback implements Callback {
     public void onResponse(Call call, Response response) throws IOException {
         mCall = call;
         if (!response.isSuccessful()) {
-            callFailure(new HttpException(response.code(), response.body()));
+            callFailure(new HttpException(response));
             return;
         }
         if (response.body() == null && !mAllowNullBodies) {

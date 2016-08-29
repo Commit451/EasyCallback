@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void failure(Throwable t) {
                         if (t instanceof HttpException) {
-                            Toast.makeText(MainActivity.this, "OkHttp error! Error code " + ((HttpException) t).getCode(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "OkHttp error! Error code " + ((HttpException) t).response().code(), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(MainActivity.this, "Not an Http error, so that is weird", Toast.LENGTH_SHORT).show();
                         }

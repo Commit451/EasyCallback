@@ -9,7 +9,7 @@ import retrofit2.Response;
 /**
  * An easier version of a Retrofit callback that simplifies
  * the response block so that you do not have to check
- * {@link Response#isSuccessful()}. You can still call {@link #getResponse()}
+ * {@link Response#isSuccessful()}. You can still call {@link #response()}
  * if you need it. If there is a HTTP error, {@link #failure(Throwable)}
  * will be called with a {@link HttpException}
  */
@@ -28,7 +28,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
     }
 
     /**
-     * Called on success. You can still get the original {@link Response} via {@link #getResponse()}
+     * Called on success. You can still get the original {@link Response} via {@link #response()}
      * @param response the response
      */
     public abstract void success(@NonNull T response);
@@ -54,7 +54,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
         mCall = call;
         mResponse = response;
         if (!response.isSuccessful()) {
-            failure(new HttpException(response.code(), response.errorBody()));
+            failure(new HttpException(response.raw(), response.errorBody()));
             return;
         }
         if (response.body() == null && !mAllowNullBodies) {
@@ -76,7 +76,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
      * instance of {@link HttpException} before calling, or check that the response is not null
      * @return the retrofit response, if any exists
      */
-    public Response<T> getResponse() {
+    public Response<T> response() {
         return mResponse;
     }
 
@@ -85,7 +85,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
      * @return the call
      */
     @NonNull
-    public Call<T> getCall() {
+    public Call<T> call() {
         return mCall;
     }
 }

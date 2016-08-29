@@ -25,6 +25,8 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.0'
+    testCompile 'com.squareup.retrofit2:converter-gson:2.1.0'
+    testCompile 'com.squareup.okhttp3:logging-interceptor:3.4.1'
     compile 'com.android.support:support-annotations:24.2.0'
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
 }
