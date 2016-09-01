@@ -43,7 +43,7 @@ public void failure(Throwable t) {
 ```
 You can also still retrieve information about the call with things like `call()` or `response()` if needed.
 
-`EasyOkCallback` is an OkHttp specific flavor of the Callback which also checks `isSuccessful()` and will also by default post the result on the main thread for simplicity.
+`EasyOkCallback` is an OkHttp specific flavor of the Callback which also checks `isSuccessful()`
 
 # Note
 If your API happens to return a `200` code, but contains an empty body, this will fall through to the `failure` block due to the fact that we check for `null` in the `onResponse` and redirect to `failure` if the response is null. You can work around this by calling `allowNullBodies(true)` on the callback.
