@@ -13,7 +13,6 @@ import okhttp3.Response;
 
 /**
  * Like {@link EasyCallback} but geared toward an OkHttp {@link Callback}.
- * This callback also automatically posts on the Main thread by default for convenience
  */
 public abstract class EasyOkCallback implements Callback {
 
@@ -56,7 +55,8 @@ public abstract class EasyOkCallback implements Callback {
      * Set the executor to have this callback call back on. Note: Overrides whatever you have set
      * on {@link OkHttpClient.Builder#dispatcher()}. If you want all calls to call back on the main
      * thread, consider overriding the {@link OkHttpClient#dispatcher()}. You can easily callback on
-     * the Main (UI) thread by passing a {@link MainThreadExecutor}
+     * the Main (UI) thread by getting the default Main thread executor from Retrofit using
+     * {@link RetrofitUtil#createDefaultCallbackExecutor()}
      * @param executor the executor to call back on
      * @return this
      */
