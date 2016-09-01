@@ -1,13 +1,13 @@
 package com.commit451.easycallback;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
 
@@ -17,24 +17,14 @@ import okhttp3.Response;
  */
 public abstract class EasyOkCallback implements Callback {
 
-    private static Handler mainHandler;
-
-    private static Handler getMainHandler() {
-        if (mainHandler == null) {
-            mainHandler = new Handler(Looper.getMainLooper());
-        }
-        return mainHandler;
-    }
-
     private Call call;
-    private boolean callbackOnMainThread;
     private boolean allowNullBodies;
+    private Executor executor;
 
     /**
      * Create an easy callback
      */
     public EasyOkCallback() {
-        callbackOnMainThread = true;
         allowNullBodies = false;
     }
 
@@ -53,16 +43,6 @@ public abstract class EasyOkCallback implements Callback {
     public abstract void failure(Throwable t);
 
     /**
-     * Allows specification of if you want the callback on the main thread. Default is true
-     * @param callbackOnMainThread true if you want it on the main thread, false if you want it on the background thread
-     * @return this
-     */
-    public EasyOkCallback callbackOnMainThread(boolean callbackOnMainThread) {
-        this.callbackOnMainThread = callbackOnMainThread;
-        return this;
-    }
-
-    /**
      * Allows specification of if you want the callback to consider null bodies as a {@link NullBodyException}. Default is false
      * @param allowNullBodies true if you want to allow null bodies, false if you want exceptions throw on null bodies
      * @return this
@@ -72,18 +52,31 @@ public abstract class EasyOkCallback implements Callback {
         return this;
     }
 
+    /**
+     * Set the executor to have this callback call back on. Note: Overrides whatever you have set
+     * on {@link OkHttpClient.Builder#dispatcher()}. If you want all calls to call back on the main
+     * thread, consider overriding the {@link OkHttpClient#dispatcher()}. You can easily callback on
+     * the Main (UI) thread by passing a {@link MainThreadExecutor}
+     * @param executor the executor to call back on
+     * @return this
+     */
+    public EasyOkCallback executor(Executor executor) {
+        this.executor = executor;
+        return this;
+    }
+
     @Override
     public void onResponse(Call call, Response response) {
         this.call = call;
         if (!response.isSuccessful()) {
-            callFailure(new HttpException(response));
+            postFailure(new HttpException(response));
             return;
         }
         if (response.body() == null && !allowNullBodies) {
-            callFailure(new NullBodyException());
+            postFailure(new NullBodyException());
             return;
         }
-        callSuccess(response);
+        postSuccess(response);
     }
 
     @Override
@@ -97,9 +90,9 @@ public abstract class EasyOkCallback implements Callback {
         return call;
     }
 
-    private void callSuccess(final Response response) {
-        if (callbackOnMainThread) {
-            getMainHandler().post(new Runnable() {
+    private void postSuccess(final Response response) {
+        if (executor != null) {
+            executor.execute(new Runnable() {
                 @Override
                 public void run() {
                     success(response);
@@ -110,9 +103,9 @@ public abstract class EasyOkCallback implements Callback {
         }
     }
 
-    private void callFailure(final Exception e) {
-        if (callbackOnMainThread) {
-            getMainHandler().post(new Runnable() {
+    private void postFailure(final Exception e) {
+        if (executor != null) {
+            executor.execute(new Runnable() {
                 @Override
                 public void run() {
                     failure(e);

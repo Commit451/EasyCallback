@@ -1,6 +1,7 @@
 package com.commit451.easycallback.sample;
 
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -10,6 +11,12 @@ import android.widget.Toast;
 import com.commit451.easycallback.EasyCallback;
 import com.commit451.easycallback.EasyOkCallback;
 import com.commit451.easycallback.HttpException;
+import com.commit451.easycallback.MainThreadExecutor;
+
+import junit.framework.Assert;
+
+import java.io.IOException;
+import java.util.concurrent.Executor;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -48,6 +55,14 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         final Google google = retrofit.create(Google.class);
 
+        //This will force callbacks to occur on the background OkHttp thread instead of the main thread
+        Executor executor = mOkHttpClient.dispatcher().executorService();
+        Retrofit backgroundCallbackRetrofit = new Retrofit.Builder()
+                .baseUrl("https://www.google.com/")
+                .callbackExecutor(executor)
+                .build();
+        final Google backgroundGoogle = backgroundCallbackRetrofit.create(Google.class);
+
         google.getAbout().enqueue(new EasyCallback<ResponseBody>() {
             @Override
             public void success(@NonNull ResponseBody response) {
@@ -61,6 +76,50 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        google.getAbout().enqueue(new EasyCallback<ResponseBody>() {
+            @Override
+            public void success(@NonNull ResponseBody response) {
+                //This will be on a background thread now, so we will be able to execute calls synchronously
+                try {
+                    retrofit2.Response<ResponseBody> responseBodyResponse = google.getAbout().execute();
+                    Assert.assertTrue(responseBodyResponse.isSuccessful());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void failure(Throwable t) {
+                mTextView.setText("Something went wrong");
+                Toast.makeText(MainActivity.this, "Oh noooooo", Toast.LENGTH_SHORT).show();
+            }
+        }.executor(mOkHttpClient.dispatcher().executorService()));
+
+        backgroundGoogle.getAbout().enqueue(new EasyCallback<ResponseBody>() {
+            @Override
+            public void success(@NonNull ResponseBody response) {
+                Assert.assertFalse(Looper.myLooper() == Looper.getMainLooper());
+            }
+
+            @Override
+            public void failure(Throwable t) {
+                Assert.assertFalse(Looper.myLooper() == Looper.getMainLooper());
+            }
+        });
+
+        google.getAbout().enqueue(new EasyCallback<ResponseBody>() {
+            @Override
+            public void success(@NonNull ResponseBody response) {
+                Assert.assertFalse(Looper.myLooper() == Looper.getMainLooper());
+            }
+
+            @Override
+            public void failure(Throwable t) {
+                Assert.assertFalse(Looper.myLooper() == Looper.getMainLooper());
+            }
+        }.executor(mOkHttpClient.dispatcher().executorService()));
+
+        final MainThreadExecutor mainThreadExecutor = new MainThreadExecutor();
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -78,8 +137,7 @@ public class MainActivity extends AppCompatActivity {
                     public void failure(Throwable t) {
                         Toast.makeText(MainActivity.this, "OkHttp error!", Toast.LENGTH_SHORT).show();
                     }
-                    //Just to show you that you can do this if you really need to
-                }.allowNullBodies(true));
+                }.allowNullBodies(true).executor(mainThreadExecutor));
             }
         });
 
