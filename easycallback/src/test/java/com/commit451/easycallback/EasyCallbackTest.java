@@ -19,7 +19,7 @@ import okhttp3.ResponseBody;
 
 /**
  * Note about these tests: if an exception is thrown when the callback is in its success or
- * failure blocks, the test will still pass. So, we have to use {@link FailureHolder} to keep
+ * failure blocks, the test will still pass. So, we have to use {@link TestHolder} to keep
  * up with the status of the test
  */
 @RunWith(RobolectricGradleTestRunner.class)
@@ -45,32 +45,37 @@ public class EasyCallbackTest {
     @Test
     public void testSuccessCallback() throws Exception {
         init();
-        final FailureHolder failureHolder = new FailureHolder();
+        final TestHolder testHolder = new TestHolder();
         final CountDownLatch countDownLatch = new CountDownLatch(0);
 
         google.getAbout().enqueue(new EasyCallback<ResponseBody>() {
             @Override
             public void success(@NonNull ResponseBody response) {
+                testHolder.call = call();
+                testHolder.retrofitResponse = response();
                 countDownLatch.countDown();
             }
 
             @Override
             public void failure(Throwable t) {
+                testHolder.failure = true;
+                testHolder.throwable = t;
                 countDownLatch.countDown();
-                failureHolder.failure = true;
-                failureHolder.throwable = t;
             }
         });
         countDownLatch.await();
-        if (failureHolder.failure) {
-            Assert.fail(failureHolder.throwable.getMessage());
+        if (testHolder.failure) {
+            Assert.fail(testHolder.throwable.getMessage());
+        } else{
+            Assert.assertNotNull(testHolder.call);
+            Assert.assertTrue(testHolder.retrofitResponse.isSuccessful());
         }
     }
 
     @Test
     public void testVoidCallback() throws Exception {
         init();
-        final FailureHolder failureHolder = new FailureHolder();
+        final TestHolder testHolder = new TestHolder();
         final CountDownLatch countDownLatch = new CountDownLatch(0);
         google.getVoid().enqueue(new EasyCallback<Void>() {
             @Override
@@ -81,36 +86,36 @@ public class EasyCallbackTest {
             @Override
             public void failure(Throwable t) {
                 countDownLatch.countDown();
-                failureHolder.failure = true;
-                failureHolder.throwable = t;
+                testHolder.failure = true;
+                testHolder.throwable = t;
             }
         }.allowNullBodies(true));
         countDownLatch.await();
-        if (failureHolder.failure) {
-            Assert.fail(failureHolder.throwable.getMessage());
+        if (testHolder.failure) {
+            Assert.fail(testHolder.throwable.getMessage());
         }
     }
 
     @Test
     public void testFailureCallback() throws Exception {
         init();
-        final FailureHolder failureHolder = new FailureHolder();
+        final TestHolder testHolder = new TestHolder();
         final CountDownLatch countDownLatch = new CountDownLatch(0);
         google.get404Error().enqueue(new EasyFailureCallback<ResponseBody>() {
             @Override
             public void failure(Throwable t) {
-                Assert.assertTrue(t instanceof HttpException);
-                int code = ((HttpException) t).response().code();
-                Assert.assertEquals(404, code);
-                if (code != 404) {
-                    failureHolder.failure = true;
-                    failureHolder.throwable = new IllegalStateException("Code is not 404");
-                }
+                testHolder.failure = true;
+                testHolder.throwable = t;
+                countDownLatch.countDown();
             }
         });
         countDownLatch.await();
-        if (failureHolder.failure) {
-            Assert.fail(failureHolder.throwable.getMessage());
+        if (!testHolder.failure) {
+            Assert.fail("This call should have failed");
+        } else {
+            Throwable e = testHolder.throwable;
+            Assert.assertTrue(e instanceof HttpException);
+            Assert.assertEquals(404, ((HttpException)e).response().code());
         }
     }
 
@@ -118,18 +123,17 @@ public class EasyCallbackTest {
     public void test404ParsingBody() throws Exception {
         init();
         final CountDownLatch countDownLatch = new CountDownLatch(0);
-        final FailureHolder failureHolder = new FailureHolder();
+        final TestHolder testHolder = new TestHolder();
         gitHub.get404().enqueue(new EasyFailureCallback<Void>() {
             @Override
             public void failure(Throwable t) {
-                failureHolder.throwable = t;
+                testHolder.throwable = t;
                 countDownLatch.countDown();
-
             }
         }.allowNullBodies(true));
 
         countDownLatch.await();
-        Throwable t = failureHolder.throwable;
+        Throwable t = testHolder.throwable;
         Assert.assertNotNull(t);
         Assert.assertTrue(t instanceof HttpException);
         int code = ((HttpException) t).response().code();
@@ -143,7 +147,7 @@ public class EasyCallbackTest {
     @Test
     public void testParsing() throws Exception {
         init();
-        final FailureHolder failureHolder = new FailureHolder();
+        final TestHolder testHolder = new TestHolder();
         final SuccessHolder<List<Contributor>> successHolder = new SuccessHolder<>();
         final CountDownLatch countDownLatch = new CountDownLatch(0);
         gitHub.contributors("square", "retrofit").enqueue(new EasyCallback<List<Contributor>>() {
@@ -155,14 +159,14 @@ public class EasyCallbackTest {
 
             @Override
             public void failure(Throwable t) {
-                failureHolder.failure = true;
-                failureHolder.throwable = t;
+                testHolder.failure = true;
+                testHolder.throwable = t;
                 countDownLatch.countDown();
             }
         });
         countDownLatch.await();
-        if (failureHolder.failure) {
-            Assert.fail(failureHolder.throwable.getMessage());
+        if (testHolder.failure) {
+            Assert.fail(testHolder.throwable.getMessage());
         } else {
             List<Contributor> response = successHolder.getValue();
             Contributor contributor = response.get(0);

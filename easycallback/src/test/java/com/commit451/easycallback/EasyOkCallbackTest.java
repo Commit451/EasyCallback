@@ -43,7 +43,7 @@ public class EasyOkCallbackTest {
     @Test
     public void testSuccessCallback() throws Exception {
         final CountDownLatch countDownLatch = new CountDownLatch(0);
-        final FailureHolder failureHolder = new FailureHolder();
+        final TestHolder testHolder = new TestHolder();
         Request request = new Request.Builder()
                 .url("https://www.google.com")
                 .build();
@@ -57,20 +57,20 @@ public class EasyOkCallbackTest {
             @Override
             public void failure(Throwable t) {
                 countDownLatch.countDown();
-                failureHolder.failure = true;
-                failureHolder.message = t.getMessage();
+                testHolder.failure = true;
+                testHolder.message = t.getMessage();
             }
         }.callbackOnMainThread(false));
         countDownLatch.await();
-        if (failureHolder.failure) {
-            Assert.fail(failureHolder.message);
+        if (testHolder.failure) {
+            Assert.fail(testHolder.message);
         }
     }
 
     @Test
     public void testFailure() throws Exception {
         final CountDownLatch countDownLatch = new CountDownLatch(0);
-        final FailureHolder failureHolder = new FailureHolder();
+        final TestHolder testHolder = new TestHolder();
         Request request = new Request.Builder()
                 .url("https://www.google.com/404")
                 .build();
@@ -79,7 +79,7 @@ public class EasyOkCallbackTest {
             @Override
             public void success(@NonNull Response response) {
                 countDownLatch.countDown();
-                failureHolder.failure = true;
+                testHolder.failure = true;
             }
 
             @Override
@@ -89,7 +89,7 @@ public class EasyOkCallbackTest {
         }.callbackOnMainThread(false));
         countDownLatch.await();
 
-        if (failureHolder.failure) {
+        if (testHolder.failure) {
             Assert.fail("This test should have failed");
         }
     }
@@ -100,7 +100,7 @@ public class EasyOkCallbackTest {
         Request request = new Request.Builder()
                 .url("https://api.github.com/teams")
                 .build();
-        final FailureHolder throwableHolder = new FailureHolder();
+        final TestHolder throwableHolder = new TestHolder();
 
         client().newCall(request).enqueue(new EasyOkCallback() {
             @Override

@@ -8,15 +8,16 @@ import okhttp3.ResponseBody;
  */
 public class HttpException extends Exception {
 
-    private Response mResponse;
-    private ResponseBody mErrorResponseBody;
+    private Response response;
+    private ResponseBody errorResponseBody;
 
     /**
      * Create an http exception assuming that {@link Response#body()} is the error body
      * @param response the response
      */
     public HttpException(Response response) {
-        mResponse = response;
+        this.response = response;
+        this.errorResponseBody = response.body();
     }
 
     /**
@@ -25,13 +26,13 @@ public class HttpException extends Exception {
      * @param errorResponseBody the error response body
      */
     public HttpException(Response response, ResponseBody errorResponseBody) {
-        mResponse = response;
-        mErrorResponseBody = errorResponseBody;
+        this.response = response;
+        this.errorResponseBody = errorResponseBody;
     }
 
     @Override
     public String getMessage() {
-        return mResponse.message();
+        return response.message();
     }
 
     /**
@@ -39,17 +40,15 @@ public class HttpException extends Exception {
      * @return the response
      */
     public Response response() {
-        return mResponse;
+        return response;
     }
 
     /**
-     * Get the error body
+     * Get the error body. If using OkHttp, this will be the normal body. Be sure to call
+     * {@link ResponseBody#close()} on the {@link ResponseBody} when you are done using it
      * @return the error body
      */
     public ResponseBody errorBody() {
-        if (mErrorResponseBody != null) {
-            return mErrorResponseBody;
-        }
-        return mResponse.body();
+        return errorResponseBody;
     }
 }
