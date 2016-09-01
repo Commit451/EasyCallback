@@ -138,7 +138,7 @@ public class EasyCallbackTest {
         Assert.assertTrue(t instanceof HttpException);
         int code = ((HttpException) t).response().code();
         Assert.assertEquals(404, code);
-        String json = OkUtil.toString(((HttpException) t).errorBody());
+        String json = OkHttpUtil.toString(((HttpException) t).errorBody());
         Gson gson = new Gson();
         GitHubErrorBody body = gson.fromJson(json, GitHubErrorBody.class);
         Assert.assertEquals("Not Found", body.message);

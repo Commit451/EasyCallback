@@ -11,7 +11,7 @@ import okhttp3.ResponseBody;
 /**
  * A Util to do things with OkHttp, such as parse {@link ResponseBody}
  */
-public class OkUtil {
+public class OkHttpUtil {
 
     /**
      * Convert the response body to a string, using {@link ResponseBody#string()}, taking care of exceptions and closing the body

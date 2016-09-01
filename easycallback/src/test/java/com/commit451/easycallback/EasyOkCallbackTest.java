@@ -60,7 +60,7 @@ public class EasyOkCallbackTest {
                 testHolder.failure = true;
                 testHolder.message = t.getMessage();
             }
-        }.callbackOnMainThread(false));
+        });
         countDownLatch.await();
         if (testHolder.failure) {
             Assert.fail(testHolder.message);
@@ -86,7 +86,7 @@ public class EasyOkCallbackTest {
             public void failure(Throwable t) {
                 countDownLatch.countDown();
             }
-        }.callbackOnMainThread(false));
+        });
         countDownLatch.await();
 
         if (testHolder.failure) {
@@ -115,11 +115,11 @@ public class EasyOkCallbackTest {
                 countDownLatch.countDown();
 
             }
-        }.callbackOnMainThread(false));
+        });
         countDownLatch.await();
         Throwable t = throwableHolder.throwable;
         Assert.assertTrue(t instanceof HttpException);
-        String json = OkUtil.toString(((HttpException)t).errorBody());
+        String json = OkHttpUtil.toString(((HttpException)t).errorBody());
         Gson gson = new Gson();
         GitHubErrorBody errorBody = gson.fromJson(json, GitHubErrorBody.class);
         Assert.assertEquals("Not Found", errorBody.message);

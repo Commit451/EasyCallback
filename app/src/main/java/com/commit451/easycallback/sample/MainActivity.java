@@ -11,7 +11,7 @@ import android.widget.Toast;
 import com.commit451.easycallback.EasyCallback;
 import com.commit451.easycallback.EasyOkCallback;
 import com.commit451.easycallback.HttpException;
-import com.commit451.easycallback.MainThreadExecutor;
+import com.commit451.easycallback.RetrofitUtil;
 
 import junit.framework.Assert;
 
@@ -119,7 +119,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }.executor(mOkHttpClient.dispatcher().executorService()));
 
-        final MainThreadExecutor mainThreadExecutor = new MainThreadExecutor();
+        //Showing this for demonstrational purposes. Normally you would just call
+        //final Executor retrofitCallbackExecutor = retrofit.callbackExecutor();
+        final Executor mainThreadExecutor = RetrofitUtil.createDefaultCallbackExecutor();
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
