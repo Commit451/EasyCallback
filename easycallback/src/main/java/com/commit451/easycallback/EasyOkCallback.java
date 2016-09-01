@@ -19,6 +19,8 @@ public abstract class EasyOkCallback implements Callback {
     private Call call;
     private boolean allowNullBodies;
     private Executor executor;
+    private Executor successExecutor;
+    private Executor failureExecutor;
 
     /**
      * Create an easy callback
@@ -43,6 +45,7 @@ public abstract class EasyOkCallback implements Callback {
 
     /**
      * Allows specification of if you want the callback to consider null bodies as a {@link NullBodyException}. Default is false
+     *
      * @param allowNullBodies true if you want to allow null bodies, false if you want exceptions throw on null bodies
      * @return this
      */
@@ -57,11 +60,42 @@ public abstract class EasyOkCallback implements Callback {
      * thread, consider overriding the {@link OkHttpClient#dispatcher()}. You can easily callback on
      * the Main (UI) thread by getting the default Main thread executor from Retrofit using
      * {@link RetrofitUtil#createDefaultCallbackExecutor()}
+     *
      * @param executor the executor to call back on
      * @return this
      */
     public EasyOkCallback executor(Executor executor) {
         this.executor = executor;
+        return this;
+    }
+
+    /**
+     * Set the executor to have this callback call {@link #success(Response)} back on. Note: Overrides whatever you have set
+     * on {@link OkHttpClient.Builder#dispatcher()} as well as {@link #executor(Executor)}. If you want all calls to call back on the main
+     * thread, consider overriding the {@link OkHttpClient#dispatcher()}. You can easily callback on
+     * the Main (UI) thread by getting the default Main thread executor from Retrofit using
+     * {@link RetrofitUtil#createDefaultCallbackExecutor()}
+     *
+     * @param executor the executor to call back on
+     * @return this
+     */
+    public EasyOkCallback successExecutor(Executor executor) {
+        this.successExecutor = executor;
+        return this;
+    }
+
+    /**
+     * Set the executor to have this callback call {@link #failure(Throwable)} back on. Note: Overrides whatever you have set
+     * on {@link OkHttpClient.Builder#dispatcher()} as well as {@link #executor(Executor)}. If you want all calls to call back on the main
+     * thread, consider overriding the {@link OkHttpClient#dispatcher()}. You can easily callback on
+     * the Main (UI) thread by getting the default Main thread executor from Retrofit using
+     * {@link RetrofitUtil#createDefaultCallbackExecutor()}
+     *
+     * @param executor the executor to call back on
+     * @return this
+     */
+    public EasyOkCallback failureExecutor(Executor executor) {
+        this.failureExecutor = executor;
         return this;
     }
 
@@ -91,7 +125,14 @@ public abstract class EasyOkCallback implements Callback {
     }
 
     private void postSuccess(final Response response) {
-        if (executor != null) {
+        if (successExecutor != null) {
+            successExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    success(response);
+                }
+            });
+        } else if (executor != null) {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -103,16 +144,23 @@ public abstract class EasyOkCallback implements Callback {
         }
     }
 
-    private void postFailure(final Exception e) {
-        if (executor != null) {
+    private void postFailure(final Throwable t) {
+        if (failureExecutor != null) {
+            failureExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    failure(t);
+                }
+            });
+        } else if (executor != null) {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    failure(e);
+                    failure(t);
                 }
             });
         } else {
-            failure(e);
+            failure(t);
         }
     }
 }

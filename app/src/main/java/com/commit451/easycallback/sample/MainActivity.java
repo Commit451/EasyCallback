@@ -119,6 +119,30 @@ public class MainActivity extends AppCompatActivity {
             }
         }.executor(mOkHttpClient.dispatcher().executorService()));
 
+        google.getAbout().enqueue(new EasyCallback<ResponseBody>() {
+            @Override
+            public void success(@NonNull ResponseBody response) {
+                Assert.assertFalse(Looper.myLooper() == Looper.getMainLooper());
+            }
+
+            @Override
+            public void failure(Throwable t) {
+                Assert.assertTrue(Looper.myLooper() == Looper.getMainLooper());
+            }
+        }.successExecutor(mOkHttpClient.dispatcher().executorService()));
+
+        google.getAbout().enqueue(new EasyCallback<ResponseBody>() {
+            @Override
+            public void success(@NonNull ResponseBody response) {
+                Assert.assertTrue(Looper.myLooper() == Looper.getMainLooper());
+            }
+
+            @Override
+            public void failure(Throwable t) {
+                Assert.assertFalse(Looper.myLooper() == Looper.getMainLooper());
+            }
+        }.failureExecutor(mOkHttpClient.dispatcher().executorService()));
+
         //Showing this for demonstrational purposes. Normally you would just call
         //final Executor retrofitCallbackExecutor = retrofit.callbackExecutor();
         final Executor mainThreadExecutor = RetrofitUtil.createDefaultCallbackExecutor();

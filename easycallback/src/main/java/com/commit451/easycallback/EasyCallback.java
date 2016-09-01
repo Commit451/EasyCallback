@@ -17,11 +17,13 @@ import retrofit2.Response;
  * will be called with a {@link HttpException}
  */
 public abstract class EasyCallback<T> implements Callback<T> {
-    
+
     private Response<T> response;
     private Call<T> call;
     private boolean allowNullBodies;
     private Executor executor;
+    private Executor successExecutor;
+    private Executor failureExecutor;
 
     /**
      * Create an easy callback
@@ -32,18 +34,21 @@ public abstract class EasyCallback<T> implements Callback<T> {
 
     /**
      * Called on success. You can still get the original {@link Response} via {@link #response()}
+     *
      * @param response the response
      */
     public abstract void success(@NonNull T response);
 
     /**
      * Called on failure.
+     *
      * @param t the exception
      */
     public abstract void failure(Throwable t);
 
     /**
      * Allows specification of if you want the callback to consider null bodies as a {@link NullBodyException}. Default is false
+     *
      * @param allowNullBodies true if you want to allow null bodies, false if you want exceptions throw on null bodies
      * @return this
      */
@@ -56,11 +61,38 @@ public abstract class EasyCallback<T> implements Callback<T> {
      * Set the executor to have this callback call back on. Note: Overrides whatever you have set
      * on {@link OkHttpClient.Builder#dispatcher()}. You can easily callback on the background thread
      * that {@link retrofit2.Retrofit} uses by calling .executor(okHttpClient.dispatcher().executorService())
+     *
      * @param executor the executor to call back on
      * @return this
      */
     public EasyCallback<T> executor(Executor executor) {
         this.executor = executor;
+        return this;
+    }
+
+    /**
+     * Set the executor to have this callback call {@link #success(Object)} back on. Note: Overrides whatever you have set
+     * on {@link OkHttpClient.Builder#dispatcher()} as well as {@link #executor(Executor)}. You can easily callback on the background thread
+     * that {@link retrofit2.Retrofit} uses by calling .executor(okHttpClient.dispatcher().executorService())
+     *
+     * @param executor the executor to call back on
+     * @return this
+     */
+    public EasyCallback<T> successExecutor(Executor executor) {
+        this.successExecutor = executor;
+        return this;
+    }
+
+    /**
+     * Set the executor to have this callback call {@link #failure(Throwable)} back on. Note: Overrides whatever you have set
+     * on {@link OkHttpClient.Builder#dispatcher()} as well as {@link #executor(Executor)}. You can easily callback on the background thread
+     * that {@link retrofit2.Retrofit} uses by calling .executor(okHttpClient.dispatcher().executorService())
+     *
+     * @param executor the executor to call back on
+     * @return this
+     */
+    public EasyCallback<T> failureExecutor(Executor executor) {
+        this.failureExecutor = executor;
         return this;
     }
 
@@ -89,6 +121,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
      * Get the Retrofit response. If you are in the {@link #failure(Throwable)} block, this will be
      * null if your failure was not an HTTP error, so make sure to check that the exception is an
      * instance of {@link HttpException} before calling, or check that the response is not null
+     *
      * @return the retrofit response, if any exists
      */
     public Response<T> response() {
@@ -97,6 +130,7 @@ public abstract class EasyCallback<T> implements Callback<T> {
 
     /**
      * Get the call that was originally made
+     *
      * @return the call
      */
     @NonNull
@@ -105,7 +139,14 @@ public abstract class EasyCallback<T> implements Callback<T> {
     }
 
     private void postSuccess(final T response) {
-        if (executor != null) {
+        if (successExecutor != null) {
+            successExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    success(response);
+                }
+            });
+        } else if (executor != null) {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -118,7 +159,14 @@ public abstract class EasyCallback<T> implements Callback<T> {
     }
 
     private void postFailure(final Throwable t) {
-        if (executor != null) {
+        if (failureExecutor != null) {
+            failureExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    failure(t);
+                }
+            });
+        } else if (executor != null) {
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
