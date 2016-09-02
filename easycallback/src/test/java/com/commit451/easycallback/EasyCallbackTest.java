@@ -31,21 +31,13 @@ public class EasyCallbackTest {
     public static void setUp() throws Exception {
         //for logging
         ShadowLog.stream = System.out;
-    }
 
-    /**
-     * Defer this from {@link #setUp()} due to issues with Robolectric Executor service not existing yet
-     */
-    public static void init() {
-        if (google == null) {
-            google = RetrofitFactory.create("https://google.com", Google.class);
-            gitHub = RetrofitFactory.create("https://api.github.com", GitHub.class);
-        }
+        google = RetrofitFactory.create("https://google.com/", Google.class);
+        gitHub = RetrofitFactory.create("https://api.github.com/", GitHub.class);
     }
 
     @Test
     public void testSuccessCallback() throws Exception {
-        init();
         google.getAbout().enqueue(new EasyCallback<ResponseBody>() {
             @Override
             public void success(@NonNull ResponseBody response) {
@@ -63,7 +55,6 @@ public class EasyCallbackTest {
 
     @Test
     public void testVoidCallback() throws Exception {
-        init();
         google.getVoid().enqueue(new EasyCallback<Void>() {
             @Override
             public void success(@NonNull Void response) {
@@ -78,7 +69,6 @@ public class EasyCallbackTest {
 
     @Test
     public void testFailureCallback() throws Exception {
-        init();
         google.get404Error().enqueue(new EasyCallback<ResponseBody>() {
             @Override
             public void success(@NonNull ResponseBody response) {
@@ -94,7 +84,6 @@ public class EasyCallbackTest {
 
     @Test
     public void test404ParsingBody() throws Exception {
-        init();
         gitHub.get404().enqueue(new EasyFailureCallback<Void>() {
             @Override
             public void failure(Throwable t) {
@@ -112,7 +101,6 @@ public class EasyCallbackTest {
 
     @Test
     public void testParsing() throws Exception {
-        init();
         gitHub.contributors("square", "retrofit").enqueue(new EasyCallback<List<Contributor>>() {
             @Override
             public void success(@NonNull List<Contributor> response) {

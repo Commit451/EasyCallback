@@ -1,8 +1,6 @@
 package com.commit451.easycallback;
 
-import android.support.annotation.NonNull;
-
-import java.util.concurrent.Executor;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -20,12 +18,7 @@ public class RetrofitFactory {
         Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .client(client)
-                .callbackExecutor(new Executor() {
-                    @Override
-                    public void execute(@NonNull Runnable command) {
-                        command.run();
-                    }
-                })
+                .callbackExecutor(MoreExecutors.directExecutor())
                 .addConverterFactory(GsonConverterFactory.create());
         return retrofitBuilder.build().create(clazz);
     }
