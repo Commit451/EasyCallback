@@ -8,22 +8,20 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLog;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 import okhttp3.ResponseBody;
 
 /**
- * Note about these tests: if an exception is thrown when the callback is in its success or
- * failure blocks, the test will still pass. So, we have to use {@link TestHolder} to keep
- * up with the status of the test
+ * Since we use an immediate callback executor, despite the calls
+ * looking async, they are actually happening synchronously
  */
-@RunWith(RobolectricGradleTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 21, shadows = NetworkSecurityPolicyWorkaround.class)
+@RunWith(RobolectricTestRunner.class)
+@Config(constants = BuildConfig.class, sdk = 23)
 public class EasyCallbackTest {
 
     static Google google;
@@ -35,6 +33,9 @@ public class EasyCallbackTest {
         ShadowLog.stream = System.out;
     }
 
+    /**
+     * Defer this from {@link #setUp()} due to issues with Robolectric Executor service not existing yet
+     */
     public static void init() {
         if (google == null) {
             google = RetrofitFactory.create("https://google.com", Google.class);
@@ -45,132 +46,84 @@ public class EasyCallbackTest {
     @Test
     public void testSuccessCallback() throws Exception {
         init();
-        final TestHolder testHolder = new TestHolder();
-        final CountDownLatch countDownLatch = new CountDownLatch(0);
-
         google.getAbout().enqueue(new EasyCallback<ResponseBody>() {
             @Override
             public void success(@NonNull ResponseBody response) {
-                testHolder.call = call();
-                testHolder.retrofitResponse = response();
-                countDownLatch.countDown();
+                Assert.assertNotNull(call());
+                Assert.assertTrue(response().isSuccessful());
+                Assert.fail();
             }
 
             @Override
             public void failure(Throwable t) {
-                testHolder.failure = true;
-                testHolder.throwable = t;
-                countDownLatch.countDown();
+                Assert.fail("This should have been success");
             }
         });
-        countDownLatch.await();
-        if (testHolder.failure) {
-            Assert.fail(testHolder.throwable.getMessage());
-        } else{
-            Assert.assertNotNull(testHolder.call);
-            Assert.assertTrue(testHolder.retrofitResponse.isSuccessful());
-        }
     }
 
     @Test
     public void testVoidCallback() throws Exception {
         init();
-        final TestHolder testHolder = new TestHolder();
-        final CountDownLatch countDownLatch = new CountDownLatch(0);
         google.getVoid().enqueue(new EasyCallback<Void>() {
             @Override
             public void success(@NonNull Void response) {
-                countDownLatch.countDown();
             }
 
             @Override
             public void failure(Throwable t) {
-                countDownLatch.countDown();
-                testHolder.failure = true;
-                testHolder.throwable = t;
+                Assert.fail("call should have been successful");
             }
         }.allowNullBodies(true));
-        countDownLatch.await();
-        if (testHolder.failure) {
-            Assert.fail(testHolder.throwable.getMessage());
-        }
     }
 
     @Test
     public void testFailureCallback() throws Exception {
         init();
-        final TestHolder testHolder = new TestHolder();
-        final CountDownLatch countDownLatch = new CountDownLatch(0);
-        google.get404Error().enqueue(new EasyFailureCallback<ResponseBody>() {
+        google.get404Error().enqueue(new EasyCallback<ResponseBody>() {
+            @Override
+            public void success(@NonNull ResponseBody response) {
+                Assert.fail("This call should have failed");
+            }
+
             @Override
             public void failure(Throwable t) {
-                testHolder.failure = true;
-                testHolder.throwable = t;
-                countDownLatch.countDown();
+                Assert.assertNotNull(t);
             }
         });
-        countDownLatch.await();
-        if (!testHolder.failure) {
-            Assert.fail("This call should have failed");
-        } else {
-            Throwable e = testHolder.throwable;
-            Assert.assertTrue(e instanceof HttpException);
-            Assert.assertEquals(404, ((HttpException)e).response().code());
-        }
     }
 
     @Test
     public void test404ParsingBody() throws Exception {
         init();
-        final CountDownLatch countDownLatch = new CountDownLatch(0);
-        final TestHolder testHolder = new TestHolder();
         gitHub.get404().enqueue(new EasyFailureCallback<Void>() {
             @Override
             public void failure(Throwable t) {
-                testHolder.throwable = t;
-                countDownLatch.countDown();
+                Assert.assertNotNull(t);
+                Assert.assertTrue(t instanceof HttpException);
+                int code = ((HttpException) t).response().code();
+                Assert.assertEquals(404, code);
+                String json = OkHttpUtil.toString(((HttpException) t).errorBody());
+                Gson gson = new Gson();
+                GitHubErrorBody body = gson.fromJson(json, GitHubErrorBody.class);
+                Assert.assertEquals("Not Found", body.message);
             }
         }.allowNullBodies(true));
-
-        countDownLatch.await();
-        Throwable t = testHolder.throwable;
-        Assert.assertNotNull(t);
-        Assert.assertTrue(t instanceof HttpException);
-        int code = ((HttpException) t).response().code();
-        Assert.assertEquals(404, code);
-        String json = OkHttpUtil.toString(((HttpException) t).errorBody());
-        Gson gson = new Gson();
-        GitHubErrorBody body = gson.fromJson(json, GitHubErrorBody.class);
-        Assert.assertEquals("Not Found", body.message);
     }
 
     @Test
     public void testParsing() throws Exception {
         init();
-        final TestHolder testHolder = new TestHolder();
-        final SuccessHolder<List<Contributor>> successHolder = new SuccessHolder<>();
-        final CountDownLatch countDownLatch = new CountDownLatch(0);
         gitHub.contributors("square", "retrofit").enqueue(new EasyCallback<List<Contributor>>() {
             @Override
             public void success(@NonNull List<Contributor> response) {
-                successHolder.setValue(response);
-                countDownLatch.countDown();
+                Contributor contributor = response.get(0);
+                Assert.assertNotNull(contributor.login);
             }
 
             @Override
             public void failure(Throwable t) {
-                testHolder.failure = true;
-                testHolder.throwable = t;
-                countDownLatch.countDown();
+                Assert.fail("call should have been success");
             }
         });
-        countDownLatch.await();
-        if (testHolder.failure) {
-            Assert.fail(testHolder.throwable.getMessage());
-        } else {
-            List<Contributor> response = successHolder.getValue();
-            Contributor contributor = response.get(0);
-            Assert.assertNotNull(contributor.login);
-        }
     }
 }
