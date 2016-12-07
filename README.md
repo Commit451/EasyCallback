@@ -49,7 +49,7 @@ You can also still retrieve information about the call with things like `call()`
 If your API happens to return a `200` code, but contains an empty body, this will fall through to the `failure` block due to the fact that we check for `null` in the `onResponse` and redirect to `failure` if the response is null. You can work around this by calling `allowNullBodies(true)` on the callback.
 
 # Why Not Use RxJava?
-[RxJava](https://github.com/ReactiveX/RxJava) is a much more flexible solution to needing to customize callbacks from Retrofit, allowing you to do things like subscribe on the desired thread for each different Observable, and many more things that EasyCallback does not support. With that comes a bit more of a learning curve. The main goal of EasyCallback is to provide an somewhat streamlined implementation of a Retrofit Callback.
+[RxJava](https://github.com/ReactiveX/RxJava) is a much more flexible solution to needing to customize callbacks from Retrofit, allowing you to do things like subscribe on the desired thread for each different Observable, and many more things that EasyCallback does not support. With that comes a bit more of a learning curve. The main goal of EasyCallback is to provide an somewhat streamlined implementation of a Retrofit Callback. If you are looking for ease of use with RxJava 2.x, take a look at [Reptar](https://github.com/Commit451/Reptar)
 
 License
 --------
